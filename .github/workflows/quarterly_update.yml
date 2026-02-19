@@ -33,8 +33,10 @@ jobs:
           OUTPUT_DIR: ./docs
         run: python calculate_roic.py
       
-      - name: Push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Quarterly update — automated"
-          file_pattern: "output/* docs/*"
+      - name: Commit and push
+        run: |
+          git config user.name "EDGAR Bot"
+          git config user.email "actions@github.com"
+          git add output/ docs/
+          git diff --staged --quiet || git commit -m "Quarterly update — $(date +%Y-%m-%d)"
+          git push --force-with-lease
