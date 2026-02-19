@@ -1,0 +1,41 @@
+name: Quarterly EDGAR → Dashboard Update
+
+on:
+  schedule:
+    - cron: '0 8 15 2,5,8,11 *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install requests pandas
+      
+      - name: Pull EDGAR data
+        env:
+          USER_AGENT_STRING: ${{ secrets.SEC_USER_AGENT }}
+          OUTPUT_DIR: ./output
+        run: |
+          sed -i "s|USER_AGENT = \"YourName your.email@example.com\"|USER_AGENT = \"$USER_AGENT_STRING\"|" edgar_roic_agent.py
+          python edgar_roic_agent.py
+      
+      - name: Calculate ROIC & generate dashboard data
+        env:
+          INPUT_DIR: ./output
+          OUTPUT_DIR: ./docs
+        run: python calculate_roic.py
+      
+      - name: Commit updated data
+        run: |
+          git config user.name "EDGAR Bot"
+          git config user.email "actions@github.com"
+          git add output/ docs/
+          git diff --staged --quiet || git commit -m "Quarterly update — $(date +%Y-%m-%d)"
+          git push
