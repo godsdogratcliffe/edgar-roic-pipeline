@@ -12,10 +12,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          token: ${{ github.token }}
       
       - uses: actions/setup-python@v5
         with:
@@ -24,13 +20,9 @@ jobs:
       - name: Install dependencies
         run: pip install requests pandas
       
-      - name: Pull latest before starting
-        run: git pull origin main
-      
       - name: Pull EDGAR data
         env:
           USER_AGENT_STRING: ${{ secrets.SEC_USER_AGENT }}
-          OUTPUT_DIR: ./output
         run: |
           sed -i "s|USER_AGENT = \"YourName your.email@example.com\"|USER_AGENT = \"$USER_AGENT_STRING\"|" edgar_roic_agent.py
           python edgar_roic_agent.py
@@ -41,12 +33,8 @@ jobs:
           OUTPUT_DIR: ./docs
         run: python calculate_roic.py
       
-      - name: Commit and push
-        run: |
-          git config user.name "EDGAR Bot"
-          git config user.email "actions@github.com"
-          git add output/ docs/
-          git diff --staged --quiet || git commit -m "Quarterly update — $(date +%Y-%m-%d)"
-          git fetch origin main
-          git rebase origin/main
-          git push origin main
+      - name: Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Quarterly update — automated"
+          file_pattern: "output/* docs/*"
