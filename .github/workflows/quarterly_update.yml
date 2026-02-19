@@ -8,10 +8,14 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
+          token: ${{ github.token }}
       
       - uses: actions/setup-python@v5
         with:
@@ -19,6 +23,9 @@ jobs:
       
       - name: Install dependencies
         run: pip install requests pandas
+      
+      - name: Pull latest before starting
+        run: git pull origin main
       
       - name: Pull EDGAR data
         env:
@@ -34,11 +41,12 @@ jobs:
           OUTPUT_DIR: ./docs
         run: python calculate_roic.py
       
-      - name: Commit updated data
+      - name: Commit and push
         run: |
           git config user.name "EDGAR Bot"
           git config user.email "actions@github.com"
           git add output/ docs/
           git diff --staged --quiet || git commit -m "Quarterly update — $(date +%Y-%m-%d)"
-          git pull --rebase origin main
-          git push
+          git fetch origin main
+          git rebase origin/main
+          git push origin main
