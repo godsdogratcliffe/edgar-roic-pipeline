@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adjusted ROIC Index — AI Capital Productivity Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface-2: #1a2235;
+  --border: #2a3450;
+  --text: #e2e8f0;
+  --text-dim: #8994a7;
+  --accent-t1: #f97316;
+  --accent-t2: #06b6d4;
+  --accent-all: #a78bfa;
+  --positive: #34d399;
+  --negative: #f87171;
+  --event-direct: #ef4444;
+  --event-partial: #f59e0b;
+  --event-disrupted: #8b5cf6;
+  --font: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Header ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 32px 0 24px;
+}
+header .container { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.logo { display: flex; flex-direction: column; gap: 4px; }
+.logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.logo span { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; }
+.meta { text-align: right; font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+
+/* ── KPI Strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 28px 0;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi.t1::before { background: var(--accent-t1); }
+.kpi.t2::before { background: var(--accent-t2); }
+.kpi.all::before { background: var(--accent-all); }
+.kpi.gap::before { background: linear-gradient(90deg, var(--accent-t1), var(--accent-t2)); }
+.kpi-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.kpi-value { font-size: 32px; font-weight: 700; font-family: var(--mono); }
+.kpi-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── Charts ── */
+.chart-section { padding: 20px 0; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.chart-card h2 { font-size: 15px; font-weight: 500; margin-bottom: 16px; color: var(--text); }
+.chart-wrap { position: relative; height: 380px; }
+
+/* ── Scoreboard ── */
+.scoreboard { padding: 28px 0 48px; }
+.scoreboard h2 { font-size: 15px; font-weight: 500; margin-bottom: 16px; }
+.score-controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.score-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.score-btn.active, .score-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--accent-all); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+th:hover { color: var(--text); }
+th.sorted::after { content: ' ▼'; }
+th.sorted.asc::after { content: ' ▲'; }
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42,52,80,0.5);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+td:first-child { font-family: var(--font); font-weight: 500; }
+tr:hover { background: var(--surface-2); }
+.tier-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.tier-badge.t1 { background: rgba(249,115,22,0.15); color: var(--accent-t1); }
+.tier-badge.t2 { background: rgba(6,182,212,0.15); color: var(--accent-t2); }
+.val-pos { color: var(--positive); }
+.val-neg { color: var(--negative); }
+
+/* ── Events ── */
+.events-timeline { padding: 20px 0 48px; }
+.event-item {
+  display: grid;
+  grid-template-columns: 80px 100px 1fr 80px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42,52,80,0.5);
+  font-size: 12px;
+  align-items: center;
+}
+.event-item:hover { background: var(--surface-2); }
+.event-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.event-dot.direct { background: var(--event-direct); }
+.event-dot.partial { background: var(--event-partial); }
+.event-dot.disrupted { background: var(--event-disrupted); }
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.methodology {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 24px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+.methodology h3 { color: var(--text); font-size: 14px; margin-bottom: 12px; }
+
+@media (max-width: 768px) {
+  .kpi-value { font-size: 24px; }
+  .chart-wrap { height: 260px; }
+  .event-item { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">
+      <h1>Adjusted ROIC Index</h1>
+      <span>AI Capital Productivity Tracker · Intentional Futures</span>
+    </div>
+    <div class="meta">
+      <div id="update-date">Loading…</div>
+      <div id="quarter-label"></div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- KPI Strip -->
+  <section class="kpi-strip" id="kpi-strip"></section>
+
+  <!-- Charts -->
+  <section class="chart-section">
+    <div class="chart-card">
+      <h2>Tier Comparison: AI Layoff Companies vs Control Group</h2>
+      <div class="chart-wrap"><canvas id="chart-tiers"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h2>ROIC Gap: AI Layoff Tier − Control Tier (pp)</h2>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-gap"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Scoreboard -->
+  <section class="scoreboard">
+    <h2>Current Quarter Company Scores</h2>
+    <div class="score-controls">
+      <button class="score-btn active" data-filter="all">All Companies</button>
+      <button class="score-btn" data-filter="1">Tier 1: AI Layoff</button>
+      <button class="score-btn" data-filter="2">Tier 2: Control</button>
+    </div>
+    <table id="scoreboard-table">
+      <thead><tr>
+        <th data-sort="name">Company</th>
+        <th data-sort="ticker">Ticker</th>
+        <th data-sort="tier">Tier</th>
+        <th data-sort="sector">Sector</th>
+        <th data-sort="adj_roic">Adj ROIC ▼</th>
+        <th data-sort="reported_roic">Reported ROIC</th>
+        <th data-sort="spread">Spread</th>
+        <th data-sort="rev_per_employee">Rev/Emp ($K)</th>
+      </tr></thead>
+      <tbody id="scoreboard-body"></tbody>
+    </table>
+  </section>
+
+  <!-- Methodology -->
+  <div class="methodology">
+    <h3>Methodology</h3>
+    <div id="methodology-text"></div>
+  </div>
+
+  <!-- Events Timeline -->
+  <section class="events-timeline">
+    <h2 style="font-size:15px;font-weight:500;margin-bottom:16px">AI Layoff Events Timeline</h2>
+    <div id="events-list"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    Data source: SEC EDGAR XBRL API · Analysis: Intentional Futures<br>
+    All financial data from public SEC filings. Market cap supplemented from public sources.<br>
+    Draft analysis — validate against primary filings before publication.
+  </div>
+</footer>
+
+<script>
+const DATA_URL = 'data.json';
+
+let DATA = null;
+let sortCol = 'adj_roic';
+let sortAsc = false;
+let tierFilter = 'all';
+
+async function init() {
+  try {
+    const resp = await fetch(DATA_URL);
+    DATA = await resp.json();
+    render();
+  } catch (e) {
+    document.getElementById('update-date').textContent = 'Error loading data';
+    console.error(e);
+  }
+}
+
+function fmtPct(v, decimals = 1) {
+  if (v == null) return '—';
+  return (v * 100).toFixed(decimals) + '%';
+}
+function fmtNum(v) {
+  if (v == null) return '—';
+  return Math.round(v).toLocaleString();
+}
+
+function render() {
+  // Meta
+  document.getElementById('update-date').textContent =
+    'Updated: ' + new Date(DATA.generated).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  document.getElementById('quarter-label').textContent = DATA.current_quarter;
+
+  renderKPIs();
+  renderTierChart();
+  renderGapChart();
+  renderScoreboard();
+  renderMethodology();
+  renderEvents();
+}
+
+function renderKPIs() {
+  const q = DATA.current_quarter;
+  const t1 = DATA.indices.tier1[q];
+  const t2 = DATA.indices.tier2[q];
+  const all = DATA.indices.all[q];
+  const gap = DATA.indices.gap[q];
+
+  const strip = document.getElementById('kpi-strip');
+  strip.innerHTML = [
+    { label: 'Tier 1: AI Layoff Cos', value: fmtPct(t1), cls: 't1', sub: '16 companies, mkt-cap weighted' },
+    { label: 'Tier 2: Control Group', value: fmtPct(t2), cls: 't2', sub: '10 companies, mkt-cap weighted' },
+    { label: 'All 26 Combined', value: fmtPct(all), cls: 'all', sub: 'Market-cap weighted index' },
+    { label: 'Tier Gap', value: (gap >= 0 ? '+' : '') + fmtPct(gap), cls: 'gap', sub: 'AI Layoff − Control' },
+  ].map(k => `
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderTierChart() {
+  const ctx = document.getElementById('chart-tiers').getContext('2d');
+  const labels = DATA.quarters;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Tier 1: AI Layoff', data: labels.map(q => DATA.indices.tier1[q] || null),
+          borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5, fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 },
+        { label: 'Tier 2: Control', data: labels.map(q => DATA.indices.tier2[q] || null),
+          borderColor: '#06b6d4', borderWidth: 2, borderDash: [6,3], fill: false, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 },
+        { label: 'All 26', data: labels.map(q => DATA.indices.all[q] || null),
+          borderColor: '#a78bfa', borderWidth: 1.5, borderDash: [2,2], fill: false, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8994a7', font: { family: 'DM Sans', size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtPct(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color: '#8994a7', font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 16 }, grid: { color: 'rgba(42,52,80,0.4)' } },
+        y: { ticks: { color: '#8994a7', callback: v => fmtPct(v, 0) }, grid: { color: 'rgba(42,52,80,0.4)' } }
+      }
+    }
+  });
+}
+
+function renderGapChart() {
+  const ctx = document.getElementById('chart-gap').getContext('2d');
+  const labels = DATA.quarters;
+  const gapData = labels.map(q => DATA.indices.gap[q] || null);
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tier Gap',
+        data: gapData,
+        backgroundColor: gapData.map(v => v >= 0 ? 'rgba(249,115,22,0.6)' : 'rgba(6,182,212,0.6)'),
+        borderColor: gapData.map(v => v >= 0 ? '#f97316' : '#06b6d4'),
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => 'Gap: ' + fmtPct(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color: '#8994a7', font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 16 }, grid: { display: false } },
+        y: { ticks: { color: '#8994a7', callback: v => fmtPct(v, 0) }, grid: { color: 'rgba(42,52,80,0.4)' } }
+      }
+    }
+  });
+}
+
+function renderScoreboard() {
+  let rows = [...DATA.scoreboard];
+  if (tierFilter !== 'all') rows = rows.filter(r => r.tier == tierFilter);
+  rows.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (va == null) va = -Infinity; if (vb == null) vb = -Infinity;
+    return sortAsc ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById('scoreboard-body');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td style="font-family:var(--mono);font-size:11px">${r.ticker}</td>
+      <td><span class="tier-badge t${r.tier}">${r.tier === 1 ? 'AI LAYOFF' : 'CONTROL'}</span></td>
+      <td style="color:var(--text-dim)">${r.sector}</td>
+      <td class="${(r.adj_roic||0)>=0?'val-pos':'val-neg'}">${fmtPct(r.adj_roic)}</td>
+      <td>${fmtPct(r.reported_roic)}</td>
+      <td class="${(r.spread||0)>=0?'val-pos':'val-neg'}">${fmtPct(r.spread)}</td>
+      <td>${r.rev_per_employee ? '$' + fmtNum(r.rev_per_employee) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderMethodology() {
+  const m = DATA.methodology_summary;
+  document.getElementById('methodology-text').innerHTML = `
+    <p><strong>Tier 1:</strong> ${m.tier1_description}</p>
+    <p><strong>Tier 2:</strong> ${m.tier2_description}</p>
+    <p><strong>Adjustments applied:</strong></p>
+    <ul style="margin:8px 0 0 20px">${m.adjustments.map(a => `<li>${a}</li>`).join('')}</ul>
+    <p style="margin-top:8px"><strong>Annualization:</strong> ${m.annualization}</p>
+  `;
+}
+
+function renderEvents() {
+  const el = document.getElementById('events-list');
+  const sorted = [...DATA.events].sort((a, b) => {
+    const qa = a.quarter.split(' '), qb = b.quarter.split(' ');
+    return (qb[1] - qa[1]) || (qb[0].slice(1) - qa[0].slice(1));
+  });
+  el.innerHTML = sorted.map(e => `
+    <div class="event-item">
+      <div style="font-weight:500;font-family:var(--mono)">${e.ticker}</div>
+      <div style="color:var(--text-dim)">${e.quarter}</div>
+      <div><span class="event-dot ${e.type}"></span>${e.type}</div>
+      <div style="font-family:var(--mono);text-align:right">${e.jobs.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+// Interactivity
+document.querySelectorAll('.score-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tierFilter = btn.dataset.filter;
+    renderScoreboard();
+  });
+});
+
+document.getElementById('scoreboard-table').querySelector('thead').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if (!th || !th.dataset.sort) return;
+  if (sortCol === th.dataset.sort) { sortAsc = !sortAsc; } else { sortCol = th.dataset.sort; sortAsc = false; }
+  document.querySelectorAll('#scoreboard-table th').forEach(t => t.classList.remove('sorted', 'asc'));
+  th.classList.add('sorted'); if (sortAsc) th.classList.add('asc');
+  renderScoreboard();
+});
+
+init();
+</script>
+</body>
+</html>
