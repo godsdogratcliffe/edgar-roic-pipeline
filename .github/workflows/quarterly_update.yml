@@ -12,8 +12,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
       
       - uses: actions/setup-python@v5
         with:
@@ -39,8 +37,10 @@ jobs:
         run: |
           git config user.name "EDGAR Bot"
           git config user.email "actions@github.com"
-          git fetch origin main
-          git reset --soft origin/main
+          git add output/ docs/
+          git stash
+          git pull origin main --rebase
+          git stash pop || true
           git add output/ docs/
           git diff --staged --quiet || git commit -m "Quarterly update — $(date +%Y-%m-%d)"
-          git push origin main
+          git push origin main || git push origin main --force-with-lease
