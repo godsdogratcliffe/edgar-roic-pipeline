@@ -5,323 +5,352 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROIC Dashboard — Internal · Intentional Futures</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0e17; --surface: #111827; --surface-2: #1a2235; --border: #2a3450;
-  --text: #e2e8f0; --text-dim: #8994a7;
-  --accent-t1: #f97316; --accent-t2: #06b6d4; --accent-all: #a78bfa;
-  --positive: #34d399; --negative: #f87171;
-  --font: 'DM Sans', sans-serif; --mono: 'JetBrains Mono', monospace;
+  --bg:#0a0e17; --surface:#111827; --surface-2:#1a2235; --border:#2a3450;
+  --text:#e2e8f0; --text-dim:#8994a7;
+  --accent-t1:#f97316; --accent-t2:#06b6d4; --accent-avg:#a78bfa; --accent-wcap:#fbbf24;
+  --positive:#34d399; --negative:#f87171;
+  --font:'DM Sans',sans-serif; --mono:'JetBrains Mono',monospace;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:var(--font); line-height:1.6; }
-.container { max-width:1440px; margin:0 auto; padding:0 24px; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;}
+.container{max-width:1440px;margin:0 auto;padding:0 24px;}
 
-header { border-bottom:1px solid var(--border); padding:24px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
-header h1 { font-size:18px; }
-header .badge { background:var(--accent-t1); color:#000; padding:3px 10px; border-radius:3px; font-size:10px; font-weight:700; letter-spacing:1px; }
+header{border-bottom:1px solid var(--border);padding:20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+header h1{font-size:17px;} .badge{background:var(--accent-t1);color:#000;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:1px;}
 
-.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin:20px 0 0; }
-.tab { padding:10px 20px; font-size:13px; color:var(--text-dim); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; }
-.tab:hover { color:var(--text); }
-.tab.active { color:var(--accent-all); border-color:var(--accent-all); }
-.tab-content { display:none; padding:24px 0; }
-.tab-content.active { display:block; }
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:16px 0 0;}
+.tab{padding:8px 18px;font-size:12px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.12s;}
+.tab:hover{color:var(--text);} .tab.active{color:var(--accent-avg);border-color:var(--accent-avg);}
+.tab-content{display:none;padding:20px 0;} .tab-content.active{display:block;}
 
-.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
-.chart-card h3 { font-size:13px; font-weight:500; margin-bottom:12px; color:var(--text-dim); }
-.chart-wrap { position:relative; height:340px; }
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px;}
+.chart-card h3{font-size:13px;font-weight:500;margin-bottom:4px;}
+.chart-card .subtitle{font-size:10px;color:var(--text-dim);margin-bottom:12px;}
+.chart-wrap{position:relative;height:420px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 
-/* Company selector */
-.company-select { display:flex; flex-wrap:wrap; gap:6px; margin:16px 0; }
-.co-btn { background:var(--surface); border:1px solid var(--border); color:var(--text-dim); padding:4px 10px; border-radius:3px; font-size:11px; font-family:var(--mono); cursor:pointer; transition:all 0.1s; }
-.co-btn:hover { border-color:var(--accent-all); color:var(--text); }
-.co-btn.active { background:var(--accent-all); color:#000; border-color:var(--accent-all); }
-.co-btn.t1 { border-left:3px solid var(--accent-t1); }
-.co-btn.t2 { border-left:3px solid var(--accent-t2); }
+.co-toggles{margin-bottom:12px;}
+.co-group{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.co-group-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;width:100%;margin-bottom:2px;}
+.co-chip{padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono);cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-dim);user-select:none;transition:all 0.1s;}
+.co-chip:hover{border-color:var(--text-dim);color:var(--text);}
+.co-chip.active{color:#000;font-weight:500;}
+.co-chip.t1.active{background:var(--accent-t1);border-color:var(--accent-t1);}
+.co-chip.t2.active{background:var(--accent-t2);border-color:var(--accent-t2);}
+.toggle-actions{display:flex;gap:6px;margin-bottom:8px;}
+.toggle-actions button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);padding:3px 10px;border-radius:3px;font-size:9px;cursor:pointer;font-family:var(--font);text-transform:uppercase;letter-spacing:0.5px;}
+.toggle-actions button:hover{color:var(--text);border-color:var(--text-dim);}
 
-/* Data table */
-.data-table-wrap { overflow-x:auto; margin:16px 0; }
-table { width:100%; border-collapse:collapse; font-size:11px; }
-th { text-align:left; padding:8px 6px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); }
-td { padding:6px; border-bottom:1px solid rgba(42,52,80,0.3); font-family:var(--mono); font-size:11px; white-space:nowrap; }
-tr:hover { background:var(--surface-2); }
-.val-pos { color:var(--positive); } .val-neg { color:var(--negative); }
+.metric-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:12px 0;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;}
+.metric-card .label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.metric-card .value{font-size:22px;font-weight:700;font-family:var(--mono);margin-top:2px;}
+.metric-card .sub{font-size:10px;color:var(--text-dim);}
 
-.metric-cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; margin:16px 0; }
-.metric-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:14px; }
-.metric-card .label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; }
-.metric-card .value { font-size:24px; font-weight:700; font-family:var(--mono); margin-top:4px; }
-.metric-card .sub { font-size:11px; color:var(--text-dim); }
+.data-table-wrap{overflow-x:auto;margin:12px 0;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;padding:6px;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);}
+td{padding:5px 6px;border-bottom:1px solid rgba(42,52,80,0.3);font-family:var(--mono);font-size:10px;white-space:nowrap;}
+tr:hover{background:var(--surface-2);}
+.val-pos{color:var(--positive);} .val-neg{color:var(--negative);}
 
-@media (max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+/* Company detail selector */
+.co-select{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0;}
+.co-select .co-chip.selected{background:var(--accent-avg);border-color:var(--accent-avg);color:#000;}
+
+@media(max-width:900px){.grid-2{grid-template-columns:1fr;} .chart-wrap{height:300px;}}
 </style>
 </head>
 <body>
-
 <div class="container">
 <header>
-  <div>
-    <h1>ROIC Dashboard <span style="color:var(--text-dim);font-weight:400">· Internal</span></h1>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px">
+  <h1>ROIC Dashboard <span style="color:var(--text-dim);font-weight:400">· Internal</span></h1>
+  <div style="display:flex;align-items:center;gap:10px">
     <span class="badge">CONFIDENTIAL</span>
-    <span style="font-size:11px;color:var(--text-dim);font-family:var(--mono)" id="meta-date"></span>
+    <span style="font-size:10px;color:var(--text-dim);font-family:var(--mono)" id="meta-date"></span>
   </div>
 </header>
 
 <div class="tabs">
-  <div class="tab active" data-tab="overview">Overview</div>
-  <div class="tab" data-tab="company">Company Drill-Down</div>
+  <div class="tab active" data-tab="index">Index & Overlay</div>
+  <div class="tab" data-tab="detail">Company Detail</div>
   <div class="tab" data-tab="data">Raw Data</div>
   <div class="tab" data-tab="events">AI Events</div>
 </div>
 
-<!-- ═══ OVERVIEW TAB ═══ -->
-<div class="tab-content active" id="tab-overview">
-  <div class="metric-cards" id="overview-kpis"></div>
-  <div class="grid-2">
-    <div class="chart-card"><h3>Tier 1 vs Tier 2 Adjusted ROIC</h3><div class="chart-wrap"><canvas id="ov-tiers"></canvas></div></div>
-    <div class="chart-card"><h3>Tier Gap Over Time</h3><div class="chart-wrap"><canvas id="ov-gap"></canvas></div></div>
+<!-- INDEX TAB -->
+<div class="tab-content active" id="tab-index">
+  <div class="metric-cards" id="idx-kpis"></div>
+  <div class="chart-card">
+    <h3>Adjusted ROIC: Aggregate + Company Overlay</h3>
+    <div class="subtitle">Mkt-cap weighted tier lines always visible. Toggle companies to overlay individual trends.</div>
+    <div class="co-toggles">
+      <div class="toggle-actions">
+        <button onclick="toggleAll(1)">All Tier 1</button>
+        <button onclick="toggleAll(2)">All Tier 2</button>
+        <button onclick="clearAll()">Clear</button>
+      </div>
+      <div class="co-group" id="t1-chips"><div class="co-group-label">Tier 1 — AI Layoff</div></div>
+      <div class="co-group" id="t2-chips"><div class="co-group-label">Tier 2 — Control</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
   </div>
-  <div class="chart-card"><h3>All Companies — Current Quarter Adj ROIC</h3><div class="chart-wrap" style="height:450px"><canvas id="ov-bar"></canvas></div></div>
+  <div class="grid-2">
+    <div class="chart-card"><h3>Tier Gap (AI Layoff − Control)</h3><div class="chart-wrap" style="height:240px"><canvas id="gap-chart"></canvas></div></div>
+    <div class="chart-card"><h3>All Companies — Current Quarter</h3><div class="chart-wrap" style="height:240px"><canvas id="bar-chart"></canvas></div></div>
+  </div>
 </div>
 
-<!-- ═══ COMPANY TAB ═══ -->
-<div class="tab-content" id="tab-company">
-  <div class="company-select" id="company-btns"></div>
-  <div class="metric-cards" id="co-metrics"></div>
+<!-- DETAIL TAB -->
+<div class="tab-content" id="tab-detail">
+  <div class="co-select" id="detail-select"></div>
+  <div class="metric-cards" id="detail-kpis"></div>
   <div class="grid-2">
-    <div class="chart-card"><h3 id="co-chart1-title">Adjusted ROIC</h3><div class="chart-wrap"><canvas id="co-roic"></canvas></div></div>
-    <div class="chart-card"><h3>Revenue & Operating Income ($mm)</h3><div class="chart-wrap"><canvas id="co-rev"></canvas></div></div>
+    <div class="chart-card"><h3 id="det-roic-title">Adjusted ROIC</h3><div class="chart-wrap" style="height:320px"><canvas id="det-roic"></canvas></div></div>
+    <div class="chart-card"><h3>Revenue & Operating Income ($mm)</h3><div class="chart-wrap" style="height:320px"><canvas id="det-rev"></canvas></div></div>
   </div>
   <div class="grid-2">
-    <div class="chart-card"><h3>Invested Capital Decomposition ($mm)</h3><div class="chart-wrap"><canvas id="co-ic"></canvas></div></div>
-    <div class="chart-card"><h3>Companion Metrics</h3><div class="chart-wrap"><canvas id="co-companion"></canvas></div></div>
+    <div class="chart-card"><h3>Invested Capital ($mm)</h3><div class="chart-wrap" style="height:320px"><canvas id="det-ic"></canvas></div></div>
+    <div class="chart-card"><h3>Companion Metrics</h3><div class="chart-wrap" style="height:320px"><canvas id="det-comp"></canvas></div></div>
   </div>
 </div>
 
-<!-- ═══ RAW DATA TAB ═══ -->
+<!-- DATA TAB -->
 <div class="tab-content" id="tab-data">
-  <div class="company-select" id="data-company-btns"></div>
-  <div class="data-table-wrap"><table id="raw-data-table"></table></div>
+  <div class="co-select" id="data-select"></div>
+  <div class="data-table-wrap"><table id="data-table"></table></div>
 </div>
 
-<!-- ═══ EVENTS TAB ═══ -->
+<!-- EVENTS TAB -->
 <div class="tab-content" id="tab-events">
-  <div class="chart-card"><h3>AI Layoff Events by Quarter (jobs cut)</h3><div class="chart-wrap" style="height:300px"><canvas id="ev-chart"></canvas></div></div>
-  <div class="data-table-wrap" id="events-table-wrap"></div>
+  <div class="chart-card"><h3>AI Layoffs by Quarter</h3><div class="chart-wrap" style="height:240px"><canvas id="ev-chart"></canvas></div></div>
+  <div class="data-table-wrap" id="ev-table"></div>
 </div>
 </div>
 
 <script>
-const DATA_URL = 'data.json';
-let D = null;
-let selectedCo = 'MSFT';
-let coCharts = {};
+let D=null, mainChart=null, activeCompanies=new Set(), selectedCo='MSFT', detCharts={};
+const CO_COLORS=['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#fb923c','#a3e635','#2dd4bf','#38bdf8','#818cf8','#c084fc','#f472b6','#fb7185','#fdba74','#bef264','#5eead4','#7dd3fc','#a5b4fc'];
 
-async function init() {
-  const resp = await fetch(DATA_URL);
-  D = await resp.json();
-  document.getElementById('meta-date').textContent = new Date(D.generated).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
-  setupTabs();
-  setupCompanyBtns();
-  renderOverview();
-  renderCompany();
-  renderEvents();
+function fmtPct(v,d=1){return v==null?'—':(v*100).toFixed(d)+'%';}
+function fmtCur(v){return v==null?'—':'$'+Math.round(v).toLocaleString();}
+function fmtNum(v){return v==null?'—':Math.round(v).toLocaleString();}
+
+async function init(){
+  const resp=await fetch('data.json'); D=await resp.json();
+  document.getElementById('meta-date').textContent=new Date(D.generated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  setupTabs(); buildChips(); buildSelectors();
+  renderIndex(); renderDetail(); renderEvents(); renderRawData();
 }
 
-function fmtPct(v,d=1){ return v==null?'—':(v*100).toFixed(d)+'%'; }
-function fmtCur(v){ return v==null?'—':'$'+Math.round(v).toLocaleString(); }
-function fmtNum(v){ return v==null?'—':Math.round(v).toLocaleString(); }
-
-function setupTabs() {
-  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active'); document.getElementById('tab-'+t.dataset.tab).classList.add('active');
   }));
 }
 
-function setupCompanyBtns() {
-  const tickers = Object.keys(D.companies).sort((a,b) => D.companies[a].info.tier - D.companies[b].info.tier || a.localeCompare(b));
-  for (const containerId of ['company-btns', 'data-company-btns']) {
-    const el = document.getElementById(containerId);
-    el.innerHTML = tickers.map(t => {
-      const tier = D.companies[t].info.tier;
-      return `<button class="co-btn t${tier} ${t===selectedCo?'active':''}" data-ticker="${t}">${t}</button>`;
-    }).join('');
-    el.addEventListener('click', e => {
-      const btn = e.target.closest('.co-btn');
-      if (!btn) return;
-      selectedCo = btn.dataset.ticker;
-      document.querySelectorAll('.co-btn').forEach(b => b.classList.toggle('active', b.dataset.ticker===selectedCo));
-      renderCompany();
-      renderRawData();
+function buildChips(){
+  const tickers=Object.keys(D.companies).sort((a,b)=>D.companies[a].info.tier-D.companies[b].info.tier||a.localeCompare(b));
+  const t1el=document.getElementById('t1-chips'), t2el=document.getElementById('t2-chips');
+  tickers.forEach(t=>{
+    const tier=D.companies[t].info.tier;
+    const chip=document.createElement('div');
+    chip.className=`co-chip t${tier}`; chip.textContent=t; chip.dataset.ticker=t;
+    chip.addEventListener('click',()=>{
+      if(activeCompanies.has(t)){activeCompanies.delete(t);chip.classList.remove('active');}
+      else{activeCompanies.add(t);chip.classList.add('active');}
+      renderMainChart();
     });
-  }
-}
-
-// ═══ OVERVIEW ═══
-function renderOverview() {
-  const qs = D.quarters;
-  const latest = qs[qs.length - 1];
-  const kpis = document.getElementById('overview-kpis');
-  const t1 = D.indices.tier1[latest], t2 = D.indices.tier2[latest], all = D.indices.all[latest], gap = D.indices.gap[latest];
-  kpis.innerHTML = [
-    {l:'Tier 1 (AI Layoff)',v:fmtPct(t1),s:'16 cos, mkt-cap wtd'},
-    {l:'Tier 2 (Control)',v:fmtPct(t2),s:'10 cos, mkt-cap wtd'},
-    {l:'All 26 Combined',v:fmtPct(all),s:'Mkt-cap weighted'},
-    {l:'Tier Gap',v:(gap>=0?'+':'')+fmtPct(gap),s:'AI Layoff − Control'},
-    {l:'Current Quarter',v:latest,s:D.quarters.length+' quarters total'},
-    {l:'Companies',v:'26',s:'16 Tier 1 + 10 Tier 2'},
-  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div><div class="sub">${k.s}</div></div>`).join('');
-
-  // Tier chart
-  new Chart(document.getElementById('ov-tiers').getContext('2d'), {
-    type:'line', data:{ labels:qs, datasets:[
-      {label:'Tier 1',data:qs.map(q=>D.indices.tier1[q]),borderColor:'#f97316',borderWidth:2.5,fill:false,tension:0.3,pointRadius:0},
-      {label:'Tier 2',data:qs.map(q=>D.indices.tier2[q]),borderColor:'#06b6d4',borderWidth:2,borderDash:[6,3],fill:false,tension:0.3,pointRadius:0},
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:11}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  // Gap chart
-  const gapData = qs.map(q=>D.indices.gap[q]||null);
-  new Chart(document.getElementById('ov-gap').getContext('2d'), {
-    type:'bar', data:{ labels:qs, datasets:[{data:gapData,backgroundColor:gapData.map(v=>v>=0?'rgba(249,115,22,0.5)':'rgba(6,182,212,0.5)'),borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  // Bar chart — all companies current quarter
-  const allCos = Object.entries(D.companies).map(([t,c])=>{
-    const qd = c.quarters[latest]||{};
-    return {ticker:t, roic:qd.adj_roic||0, tier:c.info.tier};
-  }).sort((a,b)=>b.roic-a.roic);
-  new Chart(document.getElementById('ov-bar').getContext('2d'), {
-    type:'bar', data:{
-      labels: allCos.map(c=>c.ticker),
-      datasets:[{data:allCos.map(c=>c.roic), backgroundColor:allCos.map(c=>c.tier===1?'rgba(249,115,22,0.7)':'rgba(6,182,212,0.7)'), borderWidth:0}]
-    }, options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtPct(ctx.parsed.x)}}},scales:{x:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.2)'}},y:{ticks:{color:'#e2e8f0',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}
+    (tier===1?t1el:t2el).appendChild(chip);
   });
 }
 
-// ═══ COMPANY DRILL-DOWN ═══
-function renderCompany() {
-  const co = D.companies[selectedCo];
-  if (!co) return;
-  const qs = D.quarters;
-  const latest = qs[qs.length - 1];
-  const qd = co.quarters[latest] || {};
-  const info = co.info;
-
-  // Metrics
-  document.getElementById('co-metrics').innerHTML = [
-    {l:selectedCo+' — '+info.name,v:info.sector,s:'Tier '+(info.tier===1?'1: AI Layoff':'2: Control')},
-    {l:'Adj ROIC',v:fmtPct(qd.adj_roic),s:latest},
-    {l:'Reported ROIC',v:fmtPct(qd.reported_roic),s:'Before adjustments'},
-    {l:'Spread',v:fmtPct(qd.spread),s:'Adj − Reported'},
-    {l:'Rev/Employee',v:qd.rev_per_employee?'$'+fmtNum(qd.rev_per_employee)+'K':'—',s:'Annualized'},
-    {l:'Headcount',v:fmtNum(qd.headcount),s:latest},
-  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div><div class="sub">${k.s}</div></div>`).join('');
-
-  // Destroy old charts
-  Object.values(coCharts).forEach(c=>c.destroy());
-  coCharts = {};
-
-  const qvals = q => co.quarters[q] || {};
-  document.getElementById('co-chart1-title').textContent = selectedCo + ' Adjusted ROIC (Annualized)';
-
-  // ROIC over time
-  coCharts.roic = new Chart(document.getElementById('co-roic').getContext('2d'), {
-    type:'line', data:{ labels:qs, datasets:[
-      {label:'Adj ROIC',data:qs.map(q=>qvals(q).adj_roic),borderColor:'#f97316',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
-      {label:'Reported ROIC',data:qs.map(q=>qvals(q).reported_roic),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:11}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  // Revenue & OpInc
-  coCharts.rev = new Chart(document.getElementById('co-rev').getContext('2d'), {
-    type:'bar', data:{ labels:qs, datasets:[
-      {label:'Revenue',data:qs.map(q=>qvals(q).revenue),backgroundColor:'rgba(167,139,250,0.4)',borderWidth:0},
-      {label:'Op Income',data:qs.map(q=>qvals(q).operating_income),backgroundColor:'rgba(52,211,153,0.5)',borderWidth:0},
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:11}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>'$'+Math.round(v).toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  // IC decomposition
-  coCharts.ic = new Chart(document.getElementById('co-ic').getContext('2d'), {
-    type:'line', data:{ labels:qs, datasets:[
-      {label:'Invested Capital',data:qs.map(q=>qvals(q).invested_capital),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
-      {label:'Adj IC',data:qs.map(q=>qvals(q).adj_invested_capital),borderColor:'#a78bfa',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
-      {label:'Goodwill',data:qs.map(q=>qvals(q).goodwill?-qvals(q).goodwill:null),borderColor:'#f87171',borderWidth:1,fill:true,backgroundColor:'rgba(248,113,113,0.1)',tension:0.3,pointRadius:0},
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:11}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>'$'+Math.round(v).toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  // Companion metrics
-  coCharts.comp = new Chart(document.getElementById('co-companion').getContext('2d'), {
-    type:'line', data:{ labels:qs, datasets:[
-      {label:'Capex Intensity',data:qs.map(q=>qvals(q).capex_intensity),borderColor:'#06b6d4',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0,yAxisID:'y'},
-      {label:'FCF Conversion',data:qs.map(q=>qvals(q).fcf_conversion),borderColor:'#34d399',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0,yAxisID:'y'},
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:11}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
-  });
-
-  renderRawData();
+function toggleAll(tier){
+  const chips=document.querySelectorAll(`.co-chip.t${tier}`);
+  const tickers=[...chips].map(c=>c.dataset.ticker).filter(Boolean);
+  const allOn=tickers.every(t=>activeCompanies.has(t));
+  tickers.forEach(t=>{if(allOn)activeCompanies.delete(t);else activeCompanies.add(t);});
+  chips.forEach(c=>{if(c.dataset.ticker)c.classList.toggle('active',!allOn);});
+  renderMainChart();
+}
+function clearAll(){
+  activeCompanies.clear();
+  document.querySelectorAll('#t1-chips .co-chip, #t2-chips .co-chip').forEach(c=>c.classList.remove('active'));
+  renderMainChart();
 }
 
-// ═══ RAW DATA ═══
-function renderRawData() {
-  const co = D.companies[selectedCo];
-  if (!co) return;
-  const qs = D.quarters;
-  const fields = ['adj_roic','reported_roic','spread','revenue','operating_income','nopat','invested_capital',
-    'adj_invested_capital','adj_nopat','goodwill','intangibles','leases','market_cap','headcount',
-    'rev_per_employee','capex_intensity','fcf_conversion'];
-  const labels = {'adj_roic':'Adj ROIC','reported_roic':'Reported ROIC','spread':'Spread','revenue':'Revenue','operating_income':'Op Income',
-    'nopat':'NOPAT','invested_capital':'Invested Capital','adj_invested_capital':'Adj IC','adj_nopat':'Adj NOPAT',
-    'goodwill':'Goodwill','intangibles':'Intangibles','leases':'Op Leases','market_cap':'Mkt Cap','headcount':'Headcount',
-    'rev_per_employee':'Rev/Emp ($K)','capex_intensity':'Capex Intensity','fcf_conversion':'FCF Conv'};
-  const isPct = f => ['adj_roic','reported_roic','spread','capex_intensity','fcf_conversion'].includes(f);
-
-  let html = '<thead><tr><th>Metric</th>';
-  qs.forEach(q => html += `<th>${q}</th>`);
-  html += '</tr></thead><tbody>';
-  fields.forEach(f => {
-    html += `<tr><td style="font-family:var(--font);font-weight:500;white-space:nowrap">${labels[f]||f}</td>`;
-    qs.forEach(q => {
-      const v = (co.quarters[q]||{})[f];
-      const txt = v==null?'—':isPct(f)?fmtPct(v):typeof v==='number'&&v>999?fmtCur(v):fmtNum(v);
-      const cls = isPct(f)&&v!=null?(v>=0?'val-pos':'val-neg'):'';
-      html += `<td class="${cls}">${txt}</td>`;
+function buildSelectors(){
+  const tickers=Object.keys(D.companies).sort((a,b)=>D.companies[a].info.tier-D.companies[b].info.tier||a.localeCompare(b));
+  ['detail-select','data-select'].forEach(id=>{
+    const el=document.getElementById(id);
+    tickers.forEach(t=>{
+      const tier=D.companies[t].info.tier;
+      const chip=document.createElement('div');
+      chip.className=`co-chip t${tier} ${t===selectedCo?'selected':''}`;
+      chip.textContent=t; chip.dataset.ticker=t;
+      chip.addEventListener('click',()=>{
+        selectedCo=t;
+        document.querySelectorAll('.co-select .co-chip').forEach(c=>c.classList.toggle('selected',c.dataset.ticker===t));
+        renderDetail(); renderRawData();
+      });
+      el.appendChild(chip);
     });
-    html += '</tr>';
   });
-  html += '</tbody>';
-  document.getElementById('raw-data-table').innerHTML = html;
 }
 
-// ═══ EVENTS ═══
-function renderEvents() {
-  // Aggregate by quarter
-  const byQ = {};
-  D.events.forEach(e => { byQ[e.quarter] = (byQ[e.quarter]||0) + e.jobs; });
-  const eqs = Object.keys(byQ).sort((a,b)=>{const [qa,ya]=a.split(' '),[qb,yb]=b.split(' ');return ya-yb||qa.slice(1)-qb.slice(1);});
+// ═══ INDEX TAB ═══
+function renderIndex(){
+  const qs=D.quarters, latest=qs[qs.length-1];
+  const t1=D.indices.tier1[latest],t2=D.indices.tier2[latest],gap=D.indices.gap[latest];
+  let sum=0,cnt=0;
+  Object.values(D.companies).forEach(c=>{const q=c.quarters[latest];if(q&&q.adj_roic!=null){sum+=q.adj_roic;cnt++;}});
+  const avg=cnt?sum/cnt:null;
 
-  new Chart(document.getElementById('ev-chart').getContext('2d'), {
-    type:'bar', data:{labels:eqs,datasets:[{data:eqs.map(q=>byQ[q]),backgroundColor:'rgba(239,68,68,0.6)',borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7'},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>v.toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}
+  document.getElementById('idx-kpis').innerHTML=[
+    {l:'Tier 1 Wtd',v:fmtPct(t1)},{l:'Tier 2 Wtd',v:fmtPct(t2)},
+    {l:'Equal-Wt Avg',v:fmtPct(avg)},{l:'Tier Gap',v:gap!=null?(gap>=0?'+':'')+fmtPct(gap):'—'},
+    {l:'Quarter',v:latest},{l:'Companies',v:Object.keys(D.companies).length},
+  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div></div>`).join('');
+
+  renderMainChart();
+
+  // Gap
+  const gapData=qs.map(q=>D.indices.gap[q]||null);
+  new Chart(document.getElementById('gap-chart').getContext('2d'),{
+    type:'bar',data:{labels:qs,datasets:[{data:gapData,backgroundColor:gapData.map(v=>v!=null&&v>=0?'rgba(249,115,22,0.5)':'rgba(6,182,212,0.5)'),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
   });
 
-  // Table
-  const sorted = [...D.events].sort((a,b)=>{const [qa,ya]=a.quarter.split(' '),[qb,yb]=b.quarter.split(' ');return yb-ya||qb.slice(1)-qa.slice(1);});
-  let html = '<table><thead><tr><th>Ticker</th><th>Quarter</th><th>Jobs Cut</th><th>Attribution</th></tr></thead><tbody>';
-  sorted.forEach(e => {
-    const clr = e.type==='direct'?'var(--negative)':e.type==='partial'?'#f59e0b':'#8b5cf6';
-    html += `<tr><td style="font-weight:500">${e.ticker}</td><td>${e.quarter}</td><td>${e.jobs.toLocaleString()}</td><td style="color:${clr}">${e.type}</td></tr>`;
+  // Ranked bar
+  const allCos=Object.entries(D.companies).map(([t,c])=>{const q=c.quarters[latest]||{};return{ticker:t,roic:q.adj_roic||0,tier:c.info.tier};}).sort((a,b)=>b.roic-a.roic);
+  new Chart(document.getElementById('bar-chart').getContext('2d'),{
+    type:'bar',data:{labels:allCos.map(c=>c.ticker),datasets:[{data:allCos.map(c=>c.roic),backgroundColor:allCos.map(c=>c.tier===1?'rgba(249,115,22,0.6)':'rgba(6,182,212,0.6)'),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.2)'}},y:{ticks:{color:'#e2e8f0',font:{family:'JetBrains Mono',size:9}},grid:{display:false}}}}
   });
-  html += '</tbody></table>';
-  document.getElementById('events-table-wrap').innerHTML = html;
+}
+
+function renderMainChart(){
+  if(mainChart)mainChart.destroy();
+  const qs=D.quarters;
+
+  // Equal-weight average per quarter
+  const eqAvg=qs.map(q=>{
+    let s=0,n=0;
+    Object.values(D.companies).forEach(c=>{const qd=c.quarters[q];if(qd&&qd.adj_roic!=null){s+=qd.adj_roic;n++;}});
+    return n?s/n:null;
+  });
+
+  const datasets=[
+    {label:'Tier 1: Mkt-Cap Wtd',data:qs.map(q=>D.indices.tier1[q]||null),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.05)',borderWidth:3,fill:true,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
+    {label:'Tier 2: Mkt-Cap Wtd',data:qs.map(q=>D.indices.tier2[q]||null),borderColor:'#06b6d4',borderWidth:3,borderDash:[8,4],fill:false,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
+    {label:'Equal-Wt Average',data:eqAvg,borderColor:'#a78bfa',borderWidth:2,borderDash:[3,3],fill:false,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
+  ];
+
+  let ci=0;
+  activeCompanies.forEach(ticker=>{
+    const co=D.companies[ticker];
+    if(!co)return;
+    const color=CO_COLORS[ci%CO_COLORS.length];
+    datasets.push({
+      label:ticker,
+      data:qs.map(q=>co.quarters[q]?co.quarters[q].adj_roic:null),
+      borderColor:color,borderWidth:1.5,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,order:2,
+    });
+    ci++;
+  });
+
+  mainChart=new Chart(document.getElementById('main-chart').getContext('2d'),{
+    type:'line',data:{labels:qs,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10},usePointStyle:true,pointStyle:'line',padding:12}},
+        tooltip:{backgroundColor:'#1a2235',borderColor:'#2a3450',borderWidth:1,bodyFont:{family:'JetBrains Mono',size:10},callbacks:{label:ctx=>ctx.dataset.label+': '+fmtPct(ctx.parsed.y)}}
+      },
+      scales:{
+        x:{ticks:{color:'#8994a7',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{color:'rgba(42,52,80,0.3)'}},
+        y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}
+      }
+    }
+  });
+}
+
+// ═══ DETAIL TAB ═══
+function renderDetail(){
+  const co=D.companies[selectedCo]; if(!co)return;
+  const qs=D.quarters, latest=qs[qs.length-1], qd=co.quarters[latest]||{}, info=co.info;
+
+  document.getElementById('detail-kpis').innerHTML=[
+    {l:selectedCo,v:info.name,s:info.sector+' · Tier '+(info.tier===1?'1: AI Layoff':'2: Control')},
+    {l:'Adj ROIC',v:fmtPct(qd.adj_roic)},{l:'Reported',v:fmtPct(qd.reported_roic)},
+    {l:'Spread',v:fmtPct(qd.spread)},{l:'Rev/Emp',v:qd.rev_per_employee?'$'+fmtNum(qd.rev_per_employee)+'K':'—'},
+    {l:'Headcount',v:fmtNum(qd.headcount)},
+  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div>${k.s?'<div class="sub">'+k.s+'</div>':''}</div>`).join('');
+
+  Object.values(detCharts).forEach(c=>c.destroy()); detCharts={};
+  const qv=q=>co.quarters[q]||{};
+  document.getElementById('det-roic-title').textContent=selectedCo+' Adjusted ROIC';
+
+  detCharts.roic=new Chart(document.getElementById('det-roic').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Adj ROIC',data:qs.map(q=>qv(q).adj_roic),borderColor:'#f97316',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
+    {label:'Reported',data:qs.map(q=>qv(q).reported_roic),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.rev=new Chart(document.getElementById('det-rev').getContext('2d'),{type:'bar',data:{labels:qs,datasets:[
+    {label:'Revenue',data:qs.map(q=>qv(q).revenue),backgroundColor:'rgba(167,139,250,0.4)',borderWidth:0},
+    {label:'Op Income',data:qs.map(q=>qv(q).operating_income),backgroundColor:'rgba(52,211,153,0.5)',borderWidth:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>'$'+Math.round(v).toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.ic=new Chart(document.getElementById('det-ic').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Invested Capital',data:qs.map(q=>qv(q).invested_capital),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
+    {label:'Adj IC',data:qs.map(q=>qv(q).adj_invested_capital),borderColor:'#a78bfa',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtCur(v)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.comp=new Chart(document.getElementById('det-comp').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Capex Intensity',data:qs.map(q=>qv(q).capex_intensity),borderColor:'#06b6d4',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0},
+    {label:'FCF Conversion',data:qs.map(q=>qv(q).fcf_conversion),borderColor:'#34d399',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+}
+
+// ═══ RAW DATA TAB ═══
+function renderRawData(){
+  const co=D.companies[selectedCo]; if(!co)return;
+  const qs=D.quarters;
+  const fields=['adj_roic','reported_roic','spread','revenue','operating_income','nopat','invested_capital','adj_invested_capital','adj_nopat','goodwill','intangibles','leases','market_cap','headcount','rev_per_employee','capex_intensity','fcf_conversion'];
+  const labels={adj_roic:'Adj ROIC',reported_roic:'Reported',spread:'Spread',revenue:'Revenue',operating_income:'Op Income',nopat:'NOPAT',invested_capital:'IC',adj_invested_capital:'Adj IC',adj_nopat:'Adj NOPAT',goodwill:'Goodwill',intangibles:'Intangibles',leases:'Leases',market_cap:'Mkt Cap',headcount:'Headcount',rev_per_employee:'Rev/Emp',capex_intensity:'Capex Int',fcf_conversion:'FCF Conv'};
+  const isPct=f=>['adj_roic','reported_roic','spread','capex_intensity','fcf_conversion'].includes(f);
+
+  let html='<thead><tr><th>Metric</th>'+qs.map(q=>`<th>${q}</th>`).join('')+'</tr></thead><tbody>';
+  fields.forEach(f=>{
+    html+=`<tr><td style="font-family:var(--font);font-weight:500">${labels[f]||f}</td>`;
+    qs.forEach(q=>{
+      const v=(co.quarters[q]||{})[f];
+      const txt=v==null?'—':isPct(f)?fmtPct(v):typeof v==='number'&&Math.abs(v)>99?fmtCur(v):fmtNum(v);
+      html+=`<td class="${isPct(f)&&v!=null?(v>=0?'val-pos':'val-neg'):''}">${txt}</td>`;
+    });
+    html+='</tr>';
+  });
+  document.getElementById('data-table').innerHTML=html+'</tbody>';
+}
+
+// ═══ EVENTS TAB ═══
+function renderEvents(){
+  const byQ={};
+  D.events.forEach(e=>{byQ[e.quarter]=(byQ[e.quarter]||0)+e.jobs;});
+  const eqs=Object.keys(byQ).sort((a,b)=>{const[qa,ya]=a.split(' '),[qb,yb]=b.split(' ');return ya-yb||qa.slice(1)-qb.slice(1);});
+  new Chart(document.getElementById('ev-chart').getContext('2d'),{type:'bar',data:{labels:eqs,datasets:[{data:eqs.map(q=>byQ[q]),backgroundColor:'rgba(239,68,68,0.6)',borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7'},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>v.toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  const sorted=[...D.events].sort((a,b)=>{const[qa,ya]=a.quarter.split(' '),[qb,yb]=b.quarter.split(' ');return yb-ya||qb.slice(1)-qa.slice(1);});
+  let html='<table><thead><tr><th>Ticker</th><th>Quarter</th><th>Jobs</th><th>Type</th></tr></thead><tbody>';
+  sorted.forEach(e=>{const clr=e.type==='direct'?'var(--negative)':e.type==='partial'?'#f59e0b':'#8b5cf6';
+    html+=`<tr><td style="font-weight:500">${e.ticker}</td><td>${e.quarter}</td><td>${e.jobs.toLocaleString()}</td><td style="color:${clr}">${e.type}</td></tr>`;});
+  document.getElementById('ev-table').innerHTML=html+'</tbody></table>';
 }
 
 init();
