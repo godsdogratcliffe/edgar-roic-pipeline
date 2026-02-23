@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adjusted ROIC Index — AI Capital Productivity Tracker</title>
+<title>ROIC Dashboard — Internal · Intentional Futures</title>
 <script>
 /*!
  * Chart.js v4.4.4
@@ -24,451 +24,349 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0e17;
-  --surface: #111827;
-  --surface-2: #1a2235;
-  --border: #2a3450;
-  --text: #e2e8f0;
-  --text-dim: #8994a7;
-  --accent-t1: #f97316;
-  --accent-t2: #06b6d4;
-  --accent-avg: #a78bfa;
-  --accent-wcap: #fbbf24;
-  --positive: #34d399;
-  --negative: #f87171;
-  --font: 'DM Sans', -apple-system, sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+  --bg:#0a0e17; --surface:#111827; --surface-2:#1a2235; --border:#2a3450;
+  --text:#e2e8f0; --text-dim:#8994a7;
+  --accent-t1:#f97316; --accent-t2:#06b6d4; --accent-avg:#a78bfa; --accent-wcap:#fbbf24;
+  --positive:#34d399; --negative:#f87171;
+  --font:'DM Sans',sans-serif; --mono:'JetBrains Mono',monospace;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:var(--font); line-height:1.6; }
-.container { max-width:1400px; margin:0 auto; padding:0 24px; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;}
+.container{max-width:1440px;margin:0 auto;padding:0 24px;}
 
-header { border-bottom:1px solid var(--border); padding:28px 0 20px; }
-header .container { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; }
-.logo h1 { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
-.logo span { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; }
-.meta { text-align:right; font-size:11px; color:var(--text-dim); font-family:var(--mono); }
+header{border-bottom:1px solid var(--border);padding:20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+header h1{font-size:17px;} .badge{background:var(--accent-t1);color:#000;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:1px;}
 
-/* KPI strip */
-.kpi-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; padding:24px 0 16px; }
-.kpi { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px; position:relative; overflow:hidden; }
-.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-.kpi.t1::before { background:var(--accent-t1); }
-.kpi.t2::before { background:var(--accent-t2); }
-.kpi.avg::before { background:var(--accent-avg); }
-.kpi.gap::before { background:linear-gradient(90deg,var(--accent-t1),var(--accent-t2)); }
-.kpi-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px; }
-.kpi-value { font-size:28px; font-weight:700; font-family:var(--mono); }
-.kpi-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:16px 0 0;}
+.tab{padding:8px 18px;font-size:12px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.12s;}
+.tab:hover{color:var(--text);} .tab.active{color:var(--accent-avg);border-color:var(--accent-avg);}
+.tab-content{display:none;padding:20px 0;} .tab-content.active{display:block;}
 
-/* Main chart */
-.chart-section { padding:8px 0 20px; }
-.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
-.chart-card h2 { font-size:14px; font-weight:600; margin-bottom:4px; }
-.chart-card .subtitle { font-size:11px; color:var(--text-dim); margin-bottom:16px; }
-.chart-wrap { position:relative; height:440px; }
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px;}
+.chart-card h3{font-size:13px;font-weight:500;margin-bottom:4px;}
+.chart-card .subtitle{font-size:10px;color:var(--text-dim);margin-bottom:12px;}
+.chart-wrap{position:relative;height:420px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 
-/* Company toggles */
-.co-toggles { margin-bottom:16px; }
-.co-toggles-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
-.co-group { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
-.co-group-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; width:100%; margin-bottom:2px; }
-.co-chip {
-  padding:3px 10px; border-radius:3px; font-size:11px; font-family:var(--mono);
-  cursor:pointer; transition:all 0.12s; border:1px solid var(--border); background:transparent; color:var(--text-dim);
-  user-select:none;
-}
-.co-chip:hover { border-color:var(--text-dim); color:var(--text); }
-.co-chip.active { color:#000; font-weight:500; }
-.co-chip.t1.active { background:var(--accent-t1); border-color:var(--accent-t1); }
-.co-chip.t2.active { background:var(--accent-t2); border-color:var(--accent-t2); }
-.toggle-actions { display:flex; gap:8px; margin-bottom:10px; }
-.toggle-actions button {
-  background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
-  padding:4px 12px; border-radius:3px; font-size:10px; cursor:pointer; font-family:var(--font);
-  text-transform:uppercase; letter-spacing:0.5px;
-}
-.toggle-actions button:hover { color:var(--text); border-color:var(--text-dim); }
+.co-toggles{margin-bottom:12px;}
+.co-group{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.co-group-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;width:100%;margin-bottom:2px;}
+.co-chip{padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono);cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-dim);user-select:none;transition:all 0.1s;}
+.co-chip:hover{border-color:var(--text-dim);color:var(--text);}
+.co-chip.active{color:#000;font-weight:500;}
+.co-chip.t1.active{background:var(--accent-t1);border-color:var(--accent-t1);}
+.co-chip.t2.active{background:var(--accent-t2);border-color:var(--accent-t2);}
+.toggle-actions{display:flex;gap:6px;margin-bottom:8px;}
+.toggle-actions button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);padding:3px 10px;border-radius:3px;font-size:9px;cursor:pointer;font-family:var(--font);text-transform:uppercase;letter-spacing:0.5px;}
+.toggle-actions button:hover{color:var(--text);border-color:var(--text-dim);}
 
-/* Table */
-.scoreboard { padding:20px 0 40px; }
-.scoreboard h2 { font-size:14px; font-weight:600; margin-bottom:12px; }
-table { width:100%; border-collapse:collapse; font-size:12px; }
-th { text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim); border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; }
-th:hover { color:var(--text); }
-td { padding:8px 10px; border-bottom:1px solid rgba(42,52,80,0.4); font-family:var(--mono); font-size:11px; }
-td:first-child { font-family:var(--font); font-weight:500; }
-tr:hover { background:var(--surface-2); }
-.tier-badge { display:inline-block; padding:1px 6px; border-radius:2px; font-size:9px; font-weight:600; letter-spacing:0.5px; }
-.tier-badge.t1 { background:rgba(249,115,22,0.15); color:var(--accent-t1); }
-.tier-badge.t2 { background:rgba(6,182,212,0.15); color:var(--accent-t2); }
-.val-pos { color:var(--positive); } .val-neg { color:var(--negative); }
+.metric-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:12px 0;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;}
+.metric-card .label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.metric-card .value{font-size:22px;font-weight:700;font-family:var(--mono);margin-top:2px;}
+.metric-card .sub{font-size:10px;color:var(--text-dim);}
 
-/* Gap chart */
-.gap-chart-wrap { height:220px; position:relative; }
+.data-table-wrap{overflow-x:auto;margin:12px 0;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;padding:6px;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);}
+td{padding:5px 6px;border-bottom:1px solid rgba(42,52,80,0.3);font-family:var(--mono);font-size:10px;white-space:nowrap;}
+tr:hover{background:var(--surface-2);}
+.val-pos{color:var(--positive);} .val-neg{color:var(--negative);}
 
-/* Methodology */
-.methodology { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin:0 0 24px; font-size:12px; color:var(--text-dim); line-height:1.8; }
-.methodology h3 { color:var(--text); font-size:13px; margin-bottom:8px; }
+/* Company detail selector */
+.co-select{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0;}
+.co-select .co-chip.selected{background:var(--accent-avg);border-color:var(--accent-avg);color:#000;}
 
-footer { border-top:1px solid var(--border); padding:20px 0; text-align:center; font-size:10px; color:var(--text-dim); }
-
-@media (max-width:768px) { .chart-wrap { height:300px; } .kpi-value { font-size:22px; } }
+@media(max-width:900px){.grid-2{grid-template-columns:1fr;} .chart-wrap{height:300px;}}
 </style>
 </head>
 <body>
-
+<div class="container">
 <header>
-  <div class="container">
-    <div class="logo">
-      <h1>Adjusted ROIC Index</h1>
-      <span>AI Capital Productivity Tracker · Intentional Futures</span>
-    </div>
-    <div class="meta">
-      <div id="update-date">Loading…</div>
-      <div id="quarter-label"></div>
-    </div>
+  <h1>ROIC Dashboard <span style="color:var(--text-dim);font-weight:400">· Internal</span></h1>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="badge">CONFIDENTIAL</span>
+    <span style="font-size:10px;color:var(--text-dim);font-family:var(--mono)" id="meta-date"></span>
   </div>
 </header>
 
-<main class="container">
-  <section class="kpi-strip" id="kpi-strip"></section>
+<div class="tabs">
+  <div class="tab active" data-tab="index">Index & Overlay</div>
+  <div class="tab" data-tab="detail">Company Detail</div>
+  <div class="tab" data-tab="data">Raw Data</div>
+  <div class="tab" data-tab="events">AI Events</div>
+</div>
 
-  <section class="chart-section">
-    <div class="chart-card">
-      <h2>Adjusted ROIC: Aggregate Trends with Company Overlay</h2>
-      <div class="subtitle">Aggregate lines always shown. Toggle individual companies to compare against the index.</div>
-
-      <div class="co-toggles">
-        <div class="toggle-actions">
-          <button onclick="toggleAll(1)">All Tier 1</button>
-          <button onclick="toggleAll(2)">All Tier 2</button>
-          <button onclick="clearAll()">Clear All</button>
-        </div>
-        <div class="co-group" id="t1-chips">
-          <div class="co-group-label">Tier 1 — AI Layoff Companies</div>
-        </div>
-        <div class="co-group" id="t2-chips">
-          <div class="co-group-label">Tier 2 — Control Group</div>
-        </div>
+<!-- INDEX TAB -->
+<div class="tab-content active" id="tab-index">
+  <div class="metric-cards" id="idx-kpis"></div>
+  <div class="chart-card">
+    <h3>Adjusted ROIC: Aggregate + Company Overlay</h3>
+    <div class="subtitle">Mkt-cap weighted tier lines always visible. Toggle companies to overlay individual trends.</div>
+    <div class="co-toggles">
+      <div class="toggle-actions">
+        <button onclick="toggleAll(1)">All Tier 1</button>
+        <button onclick="toggleAll(2)">All Tier 2</button>
+        <button onclick="clearAll()">Clear</button>
       </div>
-
-      <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+      <div class="co-group" id="t1-chips"><div class="co-group-label">Tier 1 — AI Layoff</div></div>
+      <div class="co-group" id="t2-chips"><div class="co-group-label">Tier 2 — Control</div></div>
     </div>
+    <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-card"><h3>Tier Gap (AI Layoff − Control)</h3><div class="chart-wrap" style="height:240px"><canvas id="gap-chart"></canvas></div></div>
+    <div class="chart-card"><h3>All Companies — Current Quarter</h3><div class="chart-wrap" style="height:240px"><canvas id="bar-chart"></canvas></div></div>
+  </div>
+</div>
 
-    <div class="chart-card">
-      <h2>ROIC Gap: AI Layoff Tier − Control Tier</h2>
-      <div class="subtitle">Positive = AI layoff companies outperforming. Negative = control group ahead.</div>
-      <div class="gap-chart-wrap"><canvas id="gap-chart"></canvas></div>
-    </div>
-  </section>
+<!-- DETAIL TAB -->
+<div class="tab-content" id="tab-detail">
+  <div class="co-select" id="detail-select"></div>
+  <div class="metric-cards" id="detail-kpis"></div>
+  <div class="grid-2">
+    <div class="chart-card"><h3 id="det-roic-title">Adjusted ROIC</h3><div class="chart-wrap" style="height:320px"><canvas id="det-roic"></canvas></div></div>
+    <div class="chart-card"><h3>Revenue & Operating Income ($mm)</h3><div class="chart-wrap" style="height:320px"><canvas id="det-rev"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-card"><h3>Invested Capital ($mm)</h3><div class="chart-wrap" style="height:320px"><canvas id="det-ic"></canvas></div></div>
+    <div class="chart-card"><h3>Companion Metrics</h3><div class="chart-wrap" style="height:320px"><canvas id="det-comp"></canvas></div></div>
+  </div>
+</div>
 
-  <section class="scoreboard">
-    <h2>Current Quarter Scoreboard</h2>
-    <table>
-      <thead><tr>
-        <th data-sort="name">Company</th>
-        <th data-sort="ticker">Ticker</th>
-        <th data-sort="tier">Tier</th>
-        <th data-sort="sector">Sector</th>
-        <th data-sort="adj_roic">Adj ROIC</th>
-        <th data-sort="reported_roic">Reported</th>
-        <th data-sort="spread">Spread</th>
-        <th data-sort="rev_per_employee">Rev/Emp</th>
-      </tr></thead>
-      <tbody id="scoreboard-body"></tbody>
-    </table>
-  </section>
+<!-- DATA TAB -->
+<div class="tab-content" id="tab-data">
+  <div class="co-select" id="data-select"></div>
+  <div class="data-table-wrap"><table id="data-table"></table></div>
+</div>
 
-  <div class="methodology" id="methodology"></div>
-</main>
-
-<footer><div class="container">
-  Data: SEC EDGAR XBRL · Analysis: Intentional Futures · Draft — validate against primary filings
-</div></footer>
+<!-- EVENTS TAB -->
+<div class="tab-content" id="tab-events">
+  <div class="chart-card"><h3>AI Layoffs by Quarter</h3><div class="chart-wrap" style="height:240px"><canvas id="ev-chart"></canvas></div></div>
+  <div class="data-table-wrap" id="ev-table"></div>
+</div>
+</div>
 
 <script>
-let DATA = null;
-let mainChart = null;
-let activeCompanies = new Set();
+let D=null, mainChart=null, activeCompanies=new Set(), selectedCo='MSFT', detCharts={};
+const CO_COLORS=['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#fb923c','#a3e635','#2dd4bf','#38bdf8','#818cf8','#c084fc','#f472b6','#fb7185','#fdba74','#bef264','#5eead4','#7dd3fc','#a5b4fc'];
 
-// Color palette for individual companies
-const CO_COLORS = [
-  '#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#6366f1',
-  '#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#fb923c','#a3e635','#2dd4bf',
-  '#38bdf8','#818cf8','#c084fc','#f472b6','#fb7185','#fdba74','#bef264','#5eead4',
-  '#7dd3fc','#a5b4fc'
-];
+function fmtPct(v,d=1){return v==null?'—':(v*100).toFixed(d)+'%';}
+function fmtCur(v){return v==null?'—':'$'+Math.round(v).toLocaleString();}
+function fmtNum(v){return v==null?'—':Math.round(v).toLocaleString();}
 
-function fmtPct(v,d=1) { return v==null?'—':(v*100).toFixed(d)+'%'; }
-function fmtNum(v) { return v==null?'—':Math.round(v).toLocaleString(); }
-
-async function init() {
-  const resp = await fetch('data.json');
-  DATA = await resp.json();
-  document.getElementById('update-date').textContent = 'Updated ' + new Date(DATA.generated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  document.getElementById('quarter-label').textContent = DATA.current_quarter;
-  renderKPIs();
-  buildChips();
-  renderMainChart();
-  renderGapChart();
-  renderScoreboard();
-  renderMethodology();
+async function init(){
+  const resp=await fetch('data.json'); D=await resp.json();
+  document.getElementById('meta-date').textContent=new Date(D.generated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  setupTabs(); buildChips(); buildSelectors();
+  renderIndex(); renderDetail(); renderEvents(); renderRawData();
 }
 
-function renderKPIs() {
-  const q = DATA.current_quarter;
-  const t1=DATA.indices.tier1[q], t2=DATA.indices.tier2[q], all=DATA.indices.all[q], gap=DATA.indices.gap[q];
-
-  // Calculate equal-weight average
-  let sum=0, cnt=0;
-  DATA.scoreboard.forEach(c => { if(c.adj_roic!=null){sum+=c.adj_roic;cnt++;}});
-  const avg = cnt>0 ? sum/cnt : null;
-
-  document.getElementById('kpi-strip').innerHTML = [
-    {l:'Tier 1 · Mkt-Cap Wtd',v:fmtPct(t1),cls:'t1',s:'16 AI layoff companies'},
-    {l:'Tier 2 · Mkt-Cap Wtd',v:fmtPct(t2),cls:'t2',s:'10 control companies'},
-    {l:'Equal-Weight Average',v:fmtPct(avg),cls:'avg',s:'All 26 companies'},
-    {l:'Tier Gap',v:gap!=null?(gap>=0?'+':'')+fmtPct(gap):'—',cls:'gap',s:'AI Layoff − Control'},
-  ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active'); document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  }));
 }
 
-function buildChips() {
-  const t1el = document.getElementById('t1-chips');
-  const t2el = document.getElementById('t2-chips');
-  // Keep the group labels
-  const t1label = t1el.querySelector('.co-group-label').outerHTML;
-  const t2label = t2el.querySelector('.co-group-label').outerHTML;
-  t1el.innerHTML = t1label;
-  t2el.innerHTML = t2label;
-
-  DATA.scoreboard.forEach((c,i) => {
-    const chip = document.createElement('div');
-    chip.className = `co-chip t${c.tier}`;
-    chip.textContent = c.ticker;
-    chip.dataset.ticker = c.ticker;
-    chip.dataset.tier = c.tier;
-    chip.addEventListener('click', () => toggleCompany(c.ticker, chip));
-    (c.tier===1 ? t1el : t2el).appendChild(chip);
-  });
-}
-
-function toggleCompany(ticker, chip) {
-  if (activeCompanies.has(ticker)) {
-    activeCompanies.delete(ticker);
-    chip.classList.remove('active');
-  } else {
-    activeCompanies.add(ticker);
-    chip.classList.add('active');
-  }
-  renderMainChart();
-}
-
-function toggleAll(tier) {
-  const chips = document.querySelectorAll(`.co-chip.t${tier}`);
-  const tickers = [...chips].map(c=>c.dataset.ticker);
-  const allActive = tickers.every(t=>activeCompanies.has(t));
-  tickers.forEach(t => { if(allActive) activeCompanies.delete(t); else activeCompanies.add(t); });
-  chips.forEach(c => c.classList.toggle('active', !allActive));
-  renderMainChart();
-}
-
-function clearAll() {
-  activeCompanies.clear();
-  document.querySelectorAll('.co-chip').forEach(c=>c.classList.remove('active'));
-  renderMainChart();
-}
-
-function renderMainChart() {
-  if (mainChart) mainChart.destroy();
-  const qs = DATA.quarters;
-
-  // Calculate equal-weight average per quarter
-  const eqAvg = qs.map(q => {
-    let s=0,n=0;
-    DATA.scoreboard.forEach(c => {
-      // Find this company's ROIC for this quarter from indices data
-      // For public view, we only have scoreboard (current quarter) — use indices instead
+function buildChips(){
+  const tickers=Object.keys(D.companies).sort((a,b)=>D.companies[a].info.tier-D.companies[b].info.tier||a.localeCompare(b));
+  const t1el=document.getElementById('t1-chips'), t2el=document.getElementById('t2-chips');
+  tickers.forEach(t=>{
+    const tier=D.companies[t].info.tier;
+    const chip=document.createElement('div');
+    chip.className=`co-chip t${tier}`; chip.textContent=t; chip.dataset.ticker=t;
+    chip.addEventListener('click',()=>{
+      if(activeCompanies.has(t)){activeCompanies.delete(t);chip.classList.remove('active');}
+      else{activeCompanies.add(t);chip.classList.add('active');}
+      renderMainChart();
     });
-    return null; // We'll compute from internal if available
+    (tier===1?t1el:t2el).appendChild(chip);
+  });
+}
+
+function toggleAll(tier){
+  const chips=document.querySelectorAll(`.co-chip.t${tier}`);
+  const tickers=[...chips].map(c=>c.dataset.ticker).filter(Boolean);
+  const allOn=tickers.every(t=>activeCompanies.has(t));
+  tickers.forEach(t=>{if(allOn)activeCompanies.delete(t);else activeCompanies.add(t);});
+  chips.forEach(c=>{if(c.dataset.ticker)c.classList.toggle('active',!allOn);});
+  renderMainChart();
+}
+function clearAll(){
+  activeCompanies.clear();
+  document.querySelectorAll('#t1-chips .co-chip, #t2-chips .co-chip').forEach(c=>c.classList.remove('active'));
+  renderMainChart();
+}
+
+function buildSelectors(){
+  const tickers=Object.keys(D.companies).sort((a,b)=>D.companies[a].info.tier-D.companies[b].info.tier||a.localeCompare(b));
+  ['detail-select','data-select'].forEach(id=>{
+    const el=document.getElementById(id);
+    tickers.forEach(t=>{
+      const tier=D.companies[t].info.tier;
+      const chip=document.createElement('div');
+      chip.className=`co-chip t${tier} ${t===selectedCo?'selected':''}`;
+      chip.textContent=t; chip.dataset.ticker=t;
+      chip.addEventListener('click',()=>{
+        selectedCo=t;
+        document.querySelectorAll('.co-select .co-chip').forEach(c=>c.classList.toggle('selected',c.dataset.ticker===t));
+        renderDetail(); renderRawData();
+      });
+      el.appendChild(chip);
+    });
+  });
+}
+
+// ═══ INDEX TAB ═══
+function renderIndex(){
+  const qs=D.quarters, latest=qs[qs.length-1];
+  const t1=D.indices.tier1[latest],t2=D.indices.tier2[latest],gap=D.indices.gap[latest];
+  let sum=0,cnt=0;
+  Object.values(D.companies).forEach(c=>{const q=c.quarters[latest];if(q&&q.adj_roic!=null){sum+=q.adj_roic;cnt++;}});
+  const avg=cnt?sum/cnt:null;
+
+  document.getElementById('idx-kpis').innerHTML=[
+    {l:'Tier 1 Wtd',v:fmtPct(t1)},{l:'Tier 2 Wtd',v:fmtPct(t2)},
+    {l:'Equal-Wt Avg',v:fmtPct(avg)},{l:'Tier Gap',v:gap!=null?(gap>=0?'+':'')+fmtPct(gap):'—'},
+    {l:'Quarter',v:latest},{l:'Companies',v:Object.keys(D.companies).length},
+  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div></div>`).join('');
+
+  renderMainChart();
+
+  // Gap
+  const gapData=qs.map(q=>D.indices.gap[q]||null);
+  new Chart(document.getElementById('gap-chart').getContext('2d'),{
+    type:'bar',data:{labels:qs,datasets:[{data:gapData,backgroundColor:gapData.map(v=>v!=null&&v>=0?'rgba(249,115,22,0.5)':'rgba(6,182,212,0.5)'),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}
   });
 
-  // Build datasets: always show the 3 aggregate lines
-  const datasets = [
-    {
-      label: 'Tier 1: AI Layoff (Mkt-Cap Wtd)',
-      data: qs.map(q => DATA.indices.tier1[q] || null),
-      borderColor: '#f97316',
-      backgroundColor: 'rgba(249,115,22,0.06)',
-      borderWidth: 3,
-      fill: true,
-      tension: 0.3,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      order: 1,
-    },
-    {
-      label: 'Tier 2: Control (Mkt-Cap Wtd)',
-      data: qs.map(q => DATA.indices.tier2[q] || null),
-      borderColor: '#06b6d4',
-      borderWidth: 3,
-      borderDash: [8,4],
-      fill: false,
-      tension: 0.3,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      order: 1,
-    },
-    {
-      label: 'All 26 (Mkt-Cap Wtd)',
-      data: qs.map(q => DATA.indices.all[q] || null),
-      borderColor: '#a78bfa',
-      borderWidth: 2,
-      borderDash: [3,3],
-      fill: false,
-      tension: 0.3,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      order: 1,
-    },
+  // Ranked bar
+  const allCos=Object.entries(D.companies).map(([t,c])=>{const q=c.quarters[latest]||{};return{ticker:t,roic:q.adj_roic||0,tier:c.info.tier};}).sort((a,b)=>b.roic-a.roic);
+  new Chart(document.getElementById('bar-chart').getContext('2d'),{
+    type:'bar',data:{labels:allCos.map(c=>c.ticker),datasets:[{data:allCos.map(c=>c.roic),backgroundColor:allCos.map(c=>c.tier===1?'rgba(249,115,22,0.6)':'rgba(6,182,212,0.6)'),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.2)'}},y:{ticks:{color:'#e2e8f0',font:{family:'JetBrains Mono',size:9}},grid:{display:false}}}}
+  });
+}
+
+function renderMainChart(){
+  if(mainChart)mainChart.destroy();
+  const qs=D.quarters;
+
+  // Equal-weight average per quarter
+  const eqAvg=qs.map(q=>{
+    let s=0,n=0;
+    Object.values(D.companies).forEach(c=>{const qd=c.quarters[q];if(qd&&qd.adj_roic!=null){s+=qd.adj_roic;n++;}});
+    return n?s/n:null;
+  });
+
+  const datasets=[
+    {label:'Tier 1: Mkt-Cap Wtd',data:qs.map(q=>D.indices.tier1[q]||null),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.05)',borderWidth:3,fill:true,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
+    {label:'Tier 2: Mkt-Cap Wtd',data:qs.map(q=>D.indices.tier2[q]||null),borderColor:'#06b6d4',borderWidth:3,borderDash:[8,4],fill:false,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
+    {label:'Equal-Wt Average',data:eqAvg,borderColor:'#a78bfa',borderWidth:2,borderDash:[3,3],fill:false,tension:0.3,pointRadius:0,pointHoverRadius:5,order:1},
   ];
 
-  // Add individual company lines for active selections
-  // For public view with internal data structure
-  let coIdx = 0;
-  activeCompanies.forEach(ticker => {
-    const co = DATA.companies ? DATA.companies[ticker] : null;
-    let coData;
-    if (co) {
-      // Internal data — has full quarterly detail
-      coData = qs.map(q => co.quarters[q] ? co.quarters[q].adj_roic : null);
-    } else {
-      // Public-only — we don't have per-quarter company data
-      // Show just current quarter as annotation
-      const sb = DATA.scoreboard.find(s=>s.ticker===ticker);
-      coData = qs.map((q,i) => i===qs.length-1 && sb ? sb.adj_roic : null);
-    }
-    const color = CO_COLORS[coIdx % CO_COLORS.length];
+  let ci=0;
+  activeCompanies.forEach(ticker=>{
+    const co=D.companies[ticker];
+    if(!co)return;
+    const color=CO_COLORS[ci%CO_COLORS.length];
     datasets.push({
-      label: ticker,
-      data: coData,
-      borderColor: color,
-      borderWidth: 1.5,
-      fill: false,
-      tension: 0.3,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      order: 2,
+      label:ticker,
+      data:qs.map(q=>co.quarters[q]?co.quarters[q].adj_roic:null),
+      borderColor:color,borderWidth:1.5,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,order:2,
     });
-    coIdx++;
+    ci++;
   });
 
-  const ctx = document.getElementById('main-chart').getContext('2d');
-  mainChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: qs, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#8994a7',
-            font: { family: 'DM Sans', size: 11 },
-            usePointStyle: true,
-            pointStyle: 'line',
-            padding: 16,
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1a2235',
-          borderColor: '#2a3450',
-          borderWidth: 1,
-          titleFont: { family: 'DM Sans', size: 12 },
-          bodyFont: { family: 'JetBrains Mono', size: 11 },
-          callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtPct(ctx.parsed.y) }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color:'#8994a7', font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:16 },
-          grid: { color:'rgba(42,52,80,0.3)' }
-        },
-        y: {
-          ticks: { color:'#8994a7', callback:v=>fmtPct(v,0) },
-          grid: { color:'rgba(42,52,80,0.3)' }
-        }
-      }
-    }
-  });
-}
-
-function renderGapChart() {
-  const qs = DATA.quarters;
-  const gapData = qs.map(q => DATA.indices.gap[q] || null);
-  new Chart(document.getElementById('gap-chart').getContext('2d'), {
-    type:'bar',
-    data:{ labels:qs, datasets:[{
-      data:gapData,
-      backgroundColor:gapData.map(v => v!=null&&v>=0 ? 'rgba(249,115,22,0.5)' : 'rgba(6,182,212,0.5)'),
-      borderWidth:0,
-    }]},
+  mainChart=new Chart(document.getElementById('main-chart').getContext('2d'),{
+    type:'line',data:{labels:qs,datasets},
     options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>'Gap: '+fmtPct(ctx.parsed.y)}} },
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10},usePointStyle:true,pointStyle:'line',padding:12}},
+        tooltip:{backgroundColor:'#1a2235',borderColor:'#2a3450',borderWidth:1,bodyFont:{family:'JetBrains Mono',size:10},callbacks:{label:ctx=>ctx.dataset.label+': '+fmtPct(ctx.parsed.y)}}
+      },
       scales:{
-        x:{ticks:{color:'#8994a7',font:{size:9},maxTicksLimit:16},grid:{display:false}},
+        x:{ticks:{color:'#8994a7',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{color:'rgba(42,52,80,0.3)'}},
         y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}
       }
     }
   });
 }
 
-function renderScoreboard() {
-  let rows = [...DATA.scoreboard];
-  let sortCol='adj_roic', sortAsc=false;
+// ═══ DETAIL TAB ═══
+function renderDetail(){
+  const co=D.companies[selectedCo]; if(!co)return;
+  const qs=D.quarters, latest=qs[qs.length-1], qd=co.quarters[latest]||{}, info=co.info;
 
-  function render() {
-    rows.sort((a,b) => {
-      let va=a[sortCol]??-Infinity, vb=b[sortCol]??-Infinity;
-      if(typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
-      return sortAsc?va-vb:vb-va;
-    });
-    document.getElementById('scoreboard-body').innerHTML = rows.map(r=>`
-      <tr>
-        <td>${r.name}</td>
-        <td style="font-size:10px">${r.ticker}</td>
-        <td><span class="tier-badge t${r.tier}">${r.tier===1?'AI LAYOFF':'CONTROL'}</span></td>
-        <td style="color:var(--text-dim);font-family:var(--font)">${r.sector}</td>
-        <td class="${(r.adj_roic||0)>=0?'val-pos':'val-neg'}">${fmtPct(r.adj_roic)}</td>
-        <td>${fmtPct(r.reported_roic)}</td>
-        <td class="${(r.spread||0)>=0?'val-pos':'val-neg'}">${fmtPct(r.spread)}</td>
-        <td>${r.rev_per_employee?'$'+fmtNum(r.rev_per_employee)+'K':'—'}</td>
-      </tr>
-    `).join('');
-  }
+  document.getElementById('detail-kpis').innerHTML=[
+    {l:selectedCo,v:info.name,s:info.sector+' · Tier '+(info.tier===1?'1: AI Layoff':'2: Control')},
+    {l:'Adj ROIC',v:fmtPct(qd.adj_roic)},{l:'Reported',v:fmtPct(qd.reported_roic)},
+    {l:'Spread',v:fmtPct(qd.spread)},{l:'Rev/Emp',v:qd.rev_per_employee?'$'+fmtNum(qd.rev_per_employee)+'K':'—'},
+    {l:'Headcount',v:fmtNum(qd.headcount)},
+  ].map(k=>`<div class="metric-card"><div class="label">${k.l}</div><div class="value">${k.v}</div>${k.s?'<div class="sub">'+k.s+'</div>':''}</div>`).join('');
 
-  document.querySelectorAll('th[data-sort]').forEach(th => {
-    th.addEventListener('click', () => {
-      if(sortCol===th.dataset.sort) sortAsc=!sortAsc; else { sortCol=th.dataset.sort; sortAsc=false; }
-      render();
-    });
-  });
-  render();
+  Object.values(detCharts).forEach(c=>c.destroy()); detCharts={};
+  const qv=q=>co.quarters[q]||{};
+  document.getElementById('det-roic-title').textContent=selectedCo+' Adjusted ROIC';
+
+  detCharts.roic=new Chart(document.getElementById('det-roic').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Adj ROIC',data:qs.map(q=>qv(q).adj_roic),borderColor:'#f97316',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
+    {label:'Reported',data:qs.map(q=>qv(q).reported_roic),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.rev=new Chart(document.getElementById('det-rev').getContext('2d'),{type:'bar',data:{labels:qs,datasets:[
+    {label:'Revenue',data:qs.map(q=>qv(q).revenue),backgroundColor:'rgba(167,139,250,0.4)',borderWidth:0},
+    {label:'Op Income',data:qs.map(q=>qv(q).operating_income),backgroundColor:'rgba(52,211,153,0.5)',borderWidth:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>'$'+Math.round(v).toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.ic=new Chart(document.getElementById('det-ic').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Invested Capital',data:qs.map(q=>qv(q).invested_capital),borderColor:'#8994a7',borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.3,pointRadius:0},
+    {label:'Adj IC',data:qs.map(q=>qv(q).adj_invested_capital),borderColor:'#a78bfa',borderWidth:2,fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtCur(v)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  detCharts.comp=new Chart(document.getElementById('det-comp').getContext('2d'),{type:'line',data:{labels:qs,datasets:[
+    {label:'Capex Intensity',data:qs.map(q=>qv(q).capex_intensity),borderColor:'#06b6d4',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0},
+    {label:'FCF Conversion',data:qs.map(q=>qv(q).fcf_conversion),borderColor:'#34d399',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8994a7',font:{size:10}}}},scales:{x:{ticks:{color:'#8994a7',font:{size:8},maxTicksLimit:12},grid:{color:'rgba(42,52,80,0.3)'}},y:{ticks:{color:'#8994a7',callback:v=>fmtPct(v,0)},grid:{color:'rgba(42,52,80,0.3)'}}}}});
 }
 
-function renderMethodology() {
-  const m = DATA.methodology_summary;
-  if(!m) return;
-  document.getElementById('methodology').innerHTML = `
-    <h3>Methodology</h3>
-    <p><strong>Tier 1:</strong> ${m.tier1_description}</p>
-    <p><strong>Tier 2:</strong> ${m.tier2_description}</p>
-    <p style="margin-top:8px"><strong>Adjustments:</strong> ${m.adjustments.join(' · ')}</p>
-    <p><strong>Annualization:</strong> ${m.annualization}</p>
-  `;
+// ═══ RAW DATA TAB ═══
+function renderRawData(){
+  const co=D.companies[selectedCo]; if(!co)return;
+  const qs=D.quarters;
+  const fields=['adj_roic','reported_roic','spread','revenue','operating_income','nopat','invested_capital','adj_invested_capital','adj_nopat','goodwill','intangibles','leases','market_cap','headcount','rev_per_employee','capex_intensity','fcf_conversion'];
+  const labels={adj_roic:'Adj ROIC',reported_roic:'Reported',spread:'Spread',revenue:'Revenue',operating_income:'Op Income',nopat:'NOPAT',invested_capital:'IC',adj_invested_capital:'Adj IC',adj_nopat:'Adj NOPAT',goodwill:'Goodwill',intangibles:'Intangibles',leases:'Leases',market_cap:'Mkt Cap',headcount:'Headcount',rev_per_employee:'Rev/Emp',capex_intensity:'Capex Int',fcf_conversion:'FCF Conv'};
+  const isPct=f=>['adj_roic','reported_roic','spread','capex_intensity','fcf_conversion'].includes(f);
+
+  let html='<thead><tr><th>Metric</th>'+qs.map(q=>`<th>${q}</th>`).join('')+'</tr></thead><tbody>';
+  fields.forEach(f=>{
+    html+=`<tr><td style="font-family:var(--font);font-weight:500">${labels[f]||f}</td>`;
+    qs.forEach(q=>{
+      const v=(co.quarters[q]||{})[f];
+      const txt=v==null?'—':isPct(f)?fmtPct(v):typeof v==='number'&&Math.abs(v)>99?fmtCur(v):fmtNum(v);
+      html+=`<td class="${isPct(f)&&v!=null?(v>=0?'val-pos':'val-neg'):''}">${txt}</td>`;
+    });
+    html+='</tr>';
+  });
+  document.getElementById('data-table').innerHTML=html+'</tbody>';
+}
+
+// ═══ EVENTS TAB ═══
+function renderEvents(){
+  const byQ={};
+  D.events.forEach(e=>{byQ[e.quarter]=(byQ[e.quarter]||0)+e.jobs;});
+  const eqs=Object.keys(byQ).sort((a,b)=>{const[qa,ya]=a.split(' '),[qb,yb]=b.split(' ');return ya-yb||qa.slice(1)-qb.slice(1);});
+  new Chart(document.getElementById('ev-chart').getContext('2d'),{type:'bar',data:{labels:eqs,datasets:[{data:eqs.map(q=>byQ[q]),backgroundColor:'rgba(239,68,68,0.6)',borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8994a7'},grid:{display:false}},y:{ticks:{color:'#8994a7',callback:v=>v.toLocaleString()},grid:{color:'rgba(42,52,80,0.3)'}}}}});
+
+  const sorted=[...D.events].sort((a,b)=>{const[qa,ya]=a.quarter.split(' '),[qb,yb]=b.quarter.split(' ');return yb-ya||qb.slice(1)-qa.slice(1);});
+  let html='<table><thead><tr><th>Ticker</th><th>Quarter</th><th>Jobs</th><th>Type</th></tr></thead><tbody>';
+  sorted.forEach(e=>{const clr=e.type==='direct'?'var(--negative)':e.type==='partial'?'#f59e0b':'#8b5cf6';
+    html+=`<tr><td style="font-weight:500">${e.ticker}</td><td>${e.quarter}</td><td>${e.jobs.toLocaleString()}</td><td style="color:${clr}">${e.type}</td></tr>`;});
+  document.getElementById('ev-table').innerHTML=html+'</tbody></table>';
 }
 
 init();
